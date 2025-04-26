@@ -6,11 +6,12 @@ import android.util.Log;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +28,71 @@ public class FTPManager {
     private Socket ftpSocket;
     private BufferedReader reader;
     private BufferedWriter writer;
+
+    public boolean uploadFile(String fileName, String content) {
+        try {
+            connect();
+
+            // 1. PASV 명령 전송 (데이터 연결 준비)
+            sendCommand("PASV");
+            String pasvResponse = readResponse();
+
+            // 2. 데이터 포트 파싱
+            String ipPortPart = pasvResponse.substring(pasvResponse.indexOf('(') + 1, pasvResponse.indexOf(')'));
+            String[] parts = ipPortPart.split(",");
+            String ip = String.join(".", Arrays.copyOfRange(parts, 0, 4));
+            int port = (Integer.parseInt(parts[4]) << 8) + Integer.parseInt(parts[5]);
+
+            // 3. 데이터 소켓 연결
+            Socket dataSocket = new Socket(ip, port);
+            BufferedOutputStream dataOutputStream = new BufferedOutputStream(dataSocket.getOutputStream());
+
+            // 4. STOR 명령 전송 (업로드할 파일 이름 전송 )
+            // 폴더이름 파일명
+            createDirectory();
+            sendCommand("STOR test/" + fileName);
+            String response = readResponse();
+
+            if (!response.startsWith("150")) {
+                dataSocket.close();
+                return false;
+            }
+
+            // 5. 텍스트 내용을 바이트 배열로 전송
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                dataOutputStream.write(buffer, 0, bytesRead);
+            }
+
+            // 6. 데이터 소켓과 파일 스트림 닫기
+            inputStream.close();
+            dataOutputStream.flush();
+            dataOutputStream.close();
+            dataSocket.close();
+
+            // 7. 업로드 완료 응답 처리
+            response = readResponse(); // 226 Transfer complete
+            disconnect();
+            return response.startsWith("226");
+        } catch (IOException e) {
+            e.printStackTrace();
+            disconnect();
+            return false;
+        }
+    }
+
+    // 폴더 생성 Test (없으면 생성필요) -> 지금은 있지만 없을 경우
+    private void createDirectory() {
+        try {
+            // MKD 명령 전송 (폴더 생성)
+            sendCommand("MKD " + "Test");
+            readResponse(); // 응답 확인
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public List<String> getFileList() {
         List<String> fileList = new ArrayList<>();
@@ -61,7 +127,6 @@ public class FTPManager {
             dataSocket.close();
 
             readResponse();
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

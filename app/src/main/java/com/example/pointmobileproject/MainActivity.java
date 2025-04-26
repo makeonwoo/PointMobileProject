@@ -47,5 +47,14 @@ public class MainActivity extends AppCompatActivity {
                 });
             }).start();
         });
+
+        String fileName = "text1.txt";
+        String fileContent = "test 1";
+
+        btnUpload.setOnClickListener(v -> {
+            new Thread(() -> {
+                ftpManager.uploadFile(fileName,fileContent);
+            }).start();
+        });
     }
 }
