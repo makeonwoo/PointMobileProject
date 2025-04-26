@@ -1,5 +1,6 @@
 package com.example.pointmobileproject;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +29,14 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(@NonNull FileListAdapter.ViewHolder holder, int position) {
-        holder.textViewFileName.setText(fileList.get(position));
+        String fileInfo = fileList.get(position);
+
+        String[] fileInfoList = fileInfo.split("\\s+");
+
+        String fileName = fileInfoList[fileInfoList.length - 1];
+
+        holder.textViewFileName.setText(fileName);
+        holder.textViewFileInfo.setText(fileInfo.replace(fileName,""));
     }
 
     @Override
@@ -38,10 +46,12 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textViewFileName;
+        TextView textViewFileInfo;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewFileName = itemView.findViewById(R.id.textViewFileName);
+            textViewFileInfo = itemView.findViewById(R.id.textViewFileInfo);
         }
     }
 }

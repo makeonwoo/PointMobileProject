@@ -38,17 +38,21 @@ public class FTPManager {
             String pasvResponse = readResponse();
 
             // 2. 데이터 포트 파싱
-            String ipPortPart = pasvResponse.substring(pasvResponse.indexOf('(') + 1, pasvResponse.indexOf(')'));
-            String[] parts = ipPortPart.split(",");
-            String ip = String.join(".", Arrays.copyOfRange(parts, 0, 4));
-            int port = (Integer.parseInt(parts[4]) << 8) + Integer.parseInt(parts[5]);
+            int start = pasvResponse.indexOf('(') + 1;
+            int end = pasvResponse.indexOf(')');
+            String responseIpPort = pasvResponse.substring(start, end);
+
+            String[] ipPort = responseIpPort.split(",");
+
+            String ip = String.join(".", ipPort[0], ipPort[1], ipPort[2], ipPort[3]);
+            //FTP 서버는 port를 상위 8 + 하위 8로 나누어서 보냄
+            int port = Integer.parseInt(ipPort[4]) * 256 + Integer.parseInt(ipPort[5]);
 
             // 3. 데이터 소켓 연결
             Socket dataSocket = new Socket(ip, port);
             BufferedOutputStream dataOutputStream = new BufferedOutputStream(dataSocket.getOutputStream());
 
-            // 4. STOR 명령 전송 (업로드할 파일 이름 전송 )
-            // 폴더이름 파일명
+            // 4. STOR 명령 전송 (업로드할 파일 이름 전송)
             createDirectory();
             sendCommand("STOR test/" + fileName);
             String response = readResponse();
@@ -60,7 +64,7 @@ public class FTPManager {
 
             // 5. 텍스트 내용을 바이트 배열로 전송
             ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 dataOutputStream.write(buffer, 0, bytesRead);
@@ -104,10 +108,14 @@ public class FTPManager {
             String pasvResponse = readResponse();
 
             // 2. 데이터 포트 파싱
-            String ipPortPart = pasvResponse.substring(pasvResponse.indexOf('(') + 1, pasvResponse.indexOf(')'));
-            String[] parts = ipPortPart.split(",");
-            String ip = String.join(".", Arrays.copyOfRange(parts, 0, 4));
-            int port = (Integer.parseInt(parts[4]) << 8) + Integer.parseInt(parts[5]);
+            int start = pasvResponse.indexOf('(') + 1;
+            int end = pasvResponse.indexOf(')');
+            String responseIpPort = pasvResponse.substring(start, end);
+
+            String[] ipPort = responseIpPort.split(",");
+
+            String ip = String.join(".", ipPort[0], ipPort[1], ipPort[2], ipPort[3]);
+            int port = Integer.parseInt(ipPort[4]) * 256 + Integer.parseInt(ipPort[5]);
 
             // 3. 데이터 소켓 연결
             Socket dataSocket = new Socket(ip, port);
