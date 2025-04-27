@@ -39,12 +39,16 @@ public class SecondFragment extends Fragment {
         // RecyclerView 기본 세팅
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // 파일 목록 불러오기
+        // 파일 목록 가져오기
         new Thread(() -> {
-            List<String> fileList = ftpManager.getFileList(); // FTP 서버에서 파일 리스트 가져오기
+            ftpManager.connect();
+            List<String> fileList = ftpManager.getFileList();
 
             requireActivity().runOnUiThread(() -> {
-                adapter = new FileListAdapter(fileList);
+                adapter = new FileListAdapter(fileList, directoryName -> {
+                    // 디렉토리 클릭했을 때
+                    changeDirectory(directoryName);
+                });
                 binding.recyclerView.setAdapter(adapter);
                 binding.loading.setVisibility(View.GONE);
             });
@@ -64,9 +68,26 @@ public class SecondFragment extends Fragment {
         });
     }
 
+    private void changeDirectory(String directoryName) {
+        binding.recyclerView.setVisibility(View.INVISIBLE);
+        binding.loading.setVisibility(View.VISIBLE);
+        new Thread(() -> {
+            ftpManager.changeDirectory(directoryName);
+            List<String> newFileList = ftpManager.getFileList();
+
+            requireActivity().runOnUiThread(() -> {
+                adapter.updateFileList(newFileList);
+                binding.loading.setVisibility(View.GONE);
+                binding.recyclerView.setVisibility(View.VISIBLE);
+            });
+        }).start();
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        //TODO 쓰레드 정리하는 로직추가 필요
+        ftpManager.disconnect();
         binding = null;
     }
 }

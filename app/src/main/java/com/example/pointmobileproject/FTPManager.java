@@ -29,6 +29,21 @@ public class FTPManager {
     private BufferedReader reader;
     private BufferedWriter writer;
 
+    public void changeDirectory(String folderName) {
+        try{
+            sendCommand("CWD "+ folderName);
+            String response = readResponse();
+            Log.d("FTP", "위치");
+            if (response.startsWith("250")) {
+                Log.d("FTP","디렉토리 이동 성공");
+            } else {
+                Log.d("FTP","디렉토리 이동 실패" + response);
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
     public boolean uploadFile(String fileName, String content) {
         try {
             connect();
@@ -101,8 +116,6 @@ public class FTPManager {
     public List<String> getFileList() {
         List<String> fileList = new ArrayList<>();
         try {
-            connect();
-
             // 1. PASV 명령 전송
             sendCommand("PASV");
             String pasvResponse = readResponse();
@@ -137,13 +150,11 @@ public class FTPManager {
             readResponse();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            disconnect();
         }
         return fileList;
     }
 
-    private boolean connect() {
+    public boolean connect() {
         try {
             // 소켓 생성하고 버퍼 연결
             ftpSocket = new Socket(FTP_HOST, FTP_PORT);
@@ -164,7 +175,7 @@ public class FTPManager {
         }
     }
 
-    private void disconnect() {
+    public void disconnect() {
         try {
             if (writer != null) sendCommand("QUIT");
             if (ftpSocket != null) ftpSocket.close();
