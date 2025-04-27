@@ -20,6 +20,8 @@ public class SecondFragment extends Fragment {
     private FTPManager ftpManager;
     private FileListAdapter adapter;
 
+    private Thread createAdapterThread;
+    private Thread getListThread;
 
 
     @Override
@@ -34,32 +36,42 @@ public class SecondFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        boolean stopFlag = false;
         ftpManager = new FTPManager();
 
         // RecyclerView 기본 세팅
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         // 파일 목록 가져오기
-        new Thread(() -> {
+        createAdapterThread = new Thread(() -> {
             ftpManager.connect();
             List<String> fileList = ftpManager.getFileList();
 
+            //데이터 가져왔더라도 쓰레드 종료되면 어댑터 건드리지않기
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+
             requireActivity().runOnUiThread(() -> {
                 adapter = new FileListAdapter(fileList, directoryName -> {
-                    // 디렉토리 클릭했을 때
                     changeDirectory(directoryName);
                 });
                 binding.recyclerView.setAdapter(adapter);
                 binding.loading.setVisibility(View.GONE);
             });
-        }).start();
+        });
+
+        createAdapterThread.start();
 
         // 뒤로가기 버튼
         binding.buttonSecond.setOnClickListener(view1 -> {
-            //1안 데이터 정리하기 -> 파일서버 연결중인 쓰레드 종료해버리면됨
-            // -> 쓰레드 핸들러로 변경... 관리? 흐음
-            // 2안 ui제한 -> 안드로이드는 ui제한보다 사용자 편의성이 우선 1안으로?
+            if (createAdapterThread != null && createAdapterThread.isAlive()){
+                createAdapterThread.interrupt();
+            }
 
+            if (getListThread != null && getListThread.isAlive()) {
+                getListThread.interrupt();
+            }
 
             requireActivity().getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new FirstFragment())
@@ -71,23 +83,26 @@ public class SecondFragment extends Fragment {
     private void changeDirectory(String directoryName) {
         binding.recyclerView.setVisibility(View.INVISIBLE);
         binding.loading.setVisibility(View.VISIBLE);
-        new Thread(() -> {
+        getListThread = new Thread(() -> {
             ftpManager.changeDirectory(directoryName);
             List<String> newFileList = ftpManager.getFileList();
+
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
 
             requireActivity().runOnUiThread(() -> {
                 adapter.updateFileList(newFileList);
                 binding.loading.setVisibility(View.GONE);
                 binding.recyclerView.setVisibility(View.VISIBLE);
             });
-        }).start();
+        });
+        getListThread.start();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        //TODO 쓰레드 정리하는 로직추가 필요
-        ftpManager.disconnect();
         binding = null;
     }
 }

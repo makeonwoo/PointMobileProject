@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,7 +40,6 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
 
         boolean isDirectory = fileInfo.startsWith("d");
 
-        Log.d("FTP POSITION",position + "isD?" + isDirectory);
         String[] fileInfoList = fileInfo.split("\\s+");
 
         String fileName = fileInfoList[fileInfoList.length - 1];
@@ -48,14 +48,14 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
         holder.textViewFileInfo.setText(fileInfo.replace(fileName,""));
 
         if (isDirectory) {
-            holder.itemView.setBackgroundColor(Color.parseColor("#808080"));
+            holder.icDirectory.setVisibility(View.VISIBLE);
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onDirectoryClick(fileName);
                 }
             });
         } else {
-            holder.itemView.setBackgroundColor(Color.parseColor("#000000"));
+            holder.icDirectory.setVisibility(View.GONE);
             holder.itemView.setOnClickListener(null);
         }
     }
@@ -63,7 +63,6 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
     public void updateFileList(List<String> newFileList) {
         this.fileList.clear();
         this.fileList.addAll(newFileList);
-        Log.d("FTP","NEW DATA " + newFileList);
         notifyDataSetChanged();
     }
 
@@ -76,10 +75,13 @@ public class FileListAdapter extends RecyclerView.Adapter<FileListAdapter.ViewHo
         TextView textViewFileName;
         TextView textViewFileInfo;
 
+        ImageView icDirectory;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewFileName = itemView.findViewById(R.id.textViewFileName);
             textViewFileInfo = itemView.findViewById(R.id.textViewFileInfo);
+            icDirectory = itemView.findViewById(R.id.icDirectory);
         }
     }
 }
