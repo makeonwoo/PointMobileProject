@@ -1,6 +1,7 @@
 package com.example.pointmobileproject;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,15 +28,25 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
         ftpManager = new FTPManager();
-
-        String fileName = "text1.txt";
-        String fileContent = "test 1";
 
         binding.btnUpload.setOnClickListener(v -> {
             new Thread(() -> {
-                ftpManager.uploadFile(fileName,fileContent);
+
+                String fileName = binding.editTextFileTitle.getText().toString() + ".txt";
+                String fileContent = binding.editTextFileContent.getText().toString();
+
+                boolean result = ftpManager.uploadFile(fileName, fileContent);
+
+                requireActivity().runOnUiThread(() -> {
+                    if (result) {
+                        binding.textviewFirst.setText(getString(R.string.upload_sucess_text));
+                    } else {
+                        binding.textviewFirst.setText(getString(R.string.upload_failed_text));
+                    }
+                    binding.editTextFileTitle.setText("");
+                    binding.editTextFileContent.setText("");
+                });
             }).start();
         });
 

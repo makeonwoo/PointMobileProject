@@ -65,7 +65,7 @@ public class SecondFragment extends Fragment {
 
         // 뒤로가기 버튼
         binding.buttonSecond.setOnClickListener(view1 -> {
-            if (createAdapterThread != null && createAdapterThread.isAlive()){
+            if (createAdapterThread != null && createAdapterThread.isAlive()) {
                 createAdapterThread.interrupt();
             }
 
@@ -83,6 +83,7 @@ public class SecondFragment extends Fragment {
     private void changeDirectory(String directoryName) {
         binding.recyclerView.setVisibility(View.INVISIBLE);
         binding.loading.setVisibility(View.VISIBLE);
+
         getListThread = new Thread(() -> {
             ftpManager.changeDirectory(directoryName);
             List<String> newFileList = ftpManager.getFileList();

@@ -5,8 +5,13 @@
     <string name="btnGetList">GetList</string>
     <string name="previous">Previous</string>
 
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="first_fragment_start_text">The file has not been uploaded yet.</string>
+    <string name="upload_sucess_text">The file has been uploaded.</string>
+    <string name="upload_failed_text">The file failed to upload.</string>
+    <string name="input_file_tilte">File Title</string>
+    <string name="hint_file_title">Please enter a file title</string>
+    <string name="input_file_content">File Content</string>
+    <string name="hint_file_content">Please enter a file Content</string>
 
     <string name="file_name">File Name</string>
     <string name="file_info">File Info</string>

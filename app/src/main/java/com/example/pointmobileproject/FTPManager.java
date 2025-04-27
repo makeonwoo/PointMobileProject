@@ -33,7 +33,6 @@ public class FTPManager {
         try{
             sendCommand("CWD "+ folderName);
             String response = readResponse();
-            Log.d("FTP", "위치");
             if (response.startsWith("250")) {
                 Log.d("FTP","디렉토리 이동 성공");
             } else {
@@ -69,7 +68,8 @@ public class FTPManager {
 
             // 4. STOR 명령 전송 (업로드할 파일 이름 전송)
             createDirectory();
-            sendCommand("STOR test/" + fileName);
+
+            sendCommand("STOR Test/" + fileName);
             String response = readResponse();
 
             if (!response.startsWith("150")) {
